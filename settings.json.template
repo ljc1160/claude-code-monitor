@@ -1,0 +1,124 @@
+{
+  "env": {
+    "ANTHROPIC_AUTH_TOKEN": "ANTHROPIC_AUTH_TOKEN",
+    "ANTHROPIC_BASE_URL": "ANTHROPIC_BASE_URL",
+    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "claude-sonnet-4-5-20250929",
+    "ANTHROPIC_DEFAULT_OPUS_MODEL": "claude-sonnet-4-5-20250929",
+    "ANTHROPIC_DEFAULT_SONNET_MODEL": "claude-sonnet-4-5-20250929",
+    "ANTHROPIC_MODEL": "claude-sonnet-4-5-20250929"
+  },
+  "model": "claude-sonnet-4-5-20250929",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"E:\\claude-code\\claude_hooks.py\" PreToolUse"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"E:\\claude-code\\claude_hooks.py\" PostToolUse"
+          }
+        ]
+      }
+    ],
+    "PermissionRequest": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"E:\\claude-code\\claude_hooks.py\" PermissionRequest"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"E:\\claude-code\\claude_hooks.py\" UserPromptSubmit"
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"E:\\claude-code\\claude_hooks.py\" Notification"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"E:\\claude-code\\claude_hooks.py\" Stop"
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"E:\\claude-code\\claude_hooks.py\" SubagentStop"
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"E:\\claude-code\\claude_hooks.py\" PreCompact"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"E:\\claude-code\\claude_hooks.py\" SessionStart"
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"E:\\claude-code\\claude_hooks.py\" SessionEnd"
+          }
+        ]
+      }
+    ]
+  },
+  "language": "Chinese"
+}

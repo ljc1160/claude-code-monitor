@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>音频测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #1a1a2e;
+            color: #fff;
+            padding: 40px;
+        }
+        h1 { color: #00d4ff; }
+        .btn {
+            background: #00d4ff;
+            color: #000;
+            border: none;
+            padding: 15px 30px;
+            margin: 10px;
+            cursor: pointer;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        .btn:hover { background: #00a8cc; }
+        .status {
+            margin-top: 20px;
+            padding: 20px;
+            background: #2a2a4e;
+            border-radius: 8px;
+        }
+        .success { color: #00ff88; }
+        .error { color: #ff4444; }
+    </style>
+</head>
+<body>
+    <h1>🔊 音频播放测试</h1>
+    <p>点击按钮测试音频播放：</p>
+
+    <div>
+        <button class="btn" onclick="testAudio('notification')">通知音</button>
+        <button class="btn" onclick="testAudio('permission_request')">权限请求</button>
+        <button class="btn" onclick="testAudio('stop')">响应完成</button>
+        <button class="btn" onclick="testAudio('user_prompt_submit')">用户输入</button>
+        <button class="btn" onclick="testAudio('pre_tool_use')">工具调用前</button>
+        <button class="btn" onclick="testAudio('post_tool_use')">工具调用后</button>
+    </div>
+
+    <div class="status" id="status">等待测试...</div>
+
+    <script>
+        function testAudio(name) {
+            const status = document.getElementById('status');
+            const audioPath = `/static/audio/${name}.wav`;
+            status.innerHTML = `正在加载: ${audioPath}...`;
+
+            const audio = new Audio(audioPath);
+            audio.volume = 0.8;
+
+            audio.oncanplaythrough = () => {
+                status.innerHTML = `<span class="success">✅ 音频加载成功: ${audioPath}</span>`;
+            };
+
+            audio.onplay = () => {
+                status.innerHTML += `<br><span class="success">▶️ 正在播放...</span>`;
+            };
+
+            audio.onended = () => {
+                status.innerHTML += `<br><span class="success">✅ 播放完成!</span>`;
+            };
+
+            audio.onerror = (e) => {
+                status.innerHTML = `<span class="error">❌ 音频加载失败: ${audioPath}</span>`;
+                status.innerHTML += `<br>错误: ${audio.error ? audio.error.message : '未知错误'}`;
+                console.error('Audio error:', e, audio.error);
+            };
+
+            audio.play().then(() => {
+                console.log('播放成功');
+            }).catch(err => {
+                status.innerHTML += `<br><span class="error">❌ 播放失败: ${err.message}</span>`;
+                console.error('Play error:', err);
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Claude Code 监控平台</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- 背景动画 -->
+    <div class="bg-animation">
+        <div class="grid-lines"></div>
+        <div class="particles" id="particles"></div>
+    </div>
+
+    <!-- 主容器 -->
+    <div class="container">
+        <!-- 顶部标题栏 -->
+        <header class="header">
+            <div class="logo">
+                <div class="logo-icon">
+                    <svg viewBox="0 0 100 100" class="logo-svg">
+                        <circle cx="50" cy="50" r="45" class="logo-circle"/>
+                        <path d="M30 50 L45 65 L70 35" class="logo-check"/>
+                    </svg>
+                </div>
+                <div class="logo-text">
+                    <h1>CLAUDE CODE</h1>
+                    <span class="subtitle">MONITORING SYSTEM</span>
+                </div>
+            </div>
+            <div class="header-stats">
+                <div class="stat-item">
+                    <span class="stat-label">状态</span>
+                    <span class="stat-value status-indicator" id="status">
+                        <span class="pulse"></span>
+                        <span class="status-text">连接中...</span>
+                    </span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">事件总数</span>
+                    <span class="stat-value" id="total-events">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">运行时间</span>
+                    <span class="stat-value" id="uptime">00:00:00</span>
+                </div>
+            </div>
+            <div class="header-controls">
+                <button class="btn btn-icon" id="sound-toggle" title="音频开关">
+                    <svg viewBox="0 0 24 24" class="icon icon-sound-on">
+                        <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/>
+                    </svg>
+                </button>
+                <button class="btn btn-icon" id="fullscreen-toggle" title="全屏">
+                    <svg viewBox="0 0 24 24" class="icon">
+                        <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- 字幕提醒区域 -->
+        <div class="subtitle-bar" id="subtitle-bar">
+            <div class="subtitle-content" id="subtitle-content">
+                <span class="subtitle-icon">●</span>
+                <span class="subtitle-text">系统就绪，等待事件...</span>
+            </div>
+        </div>
+
+        <!-- 主内容区 -->
+        <main class="main-content">
+            <!-- 左侧面板 - 会话列表 -->
+            <section class="panel panel-sessions">
+                <div class="panel-header">
+                    <h2><span class="icon-task"></span>活跃会话</h2>
+                    <div class="session-count-badge">
+                        <span id="session-count">0</span>
+                    </div>
+                </div>
+                <div class="panel-body">
+                    <div class="session-list" id="session-list">
+                        <div class="session-empty">
+                            <div class="empty-icon">💻</div>
+                            <p>暂无活跃会话</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 中间面板 - 统计和可视化 -->
+            <section class="panel panel-stats">
+                <div class="panel-header">
+                    <h2><span class="icon-chart"></span>数据统计</h2>
+                </div>
+                <div class="panel-body">
+                    <!-- 事件类型统计 -->
+                    <div class="stats-grid">
+                        <div class="stat-card" data-type="PreToolUse">
+                            <div class="stat-card-icon">🔧</div>
+                            <div class="stat-card-info">
+                                <span class="stat-card-value" id="stat-PreToolUse">0</span>
+                                <span class="stat-card-label">工具调用</span>
+                            </div>
+                        </div>
+                        <div class="stat-card" data-type="UserPromptSubmit">
+                            <div class="stat-card-icon">💬</div>
+                            <div class="stat-card-info">
+                                <span class="stat-card-value" id="stat-UserPromptSubmit">0</span>
+                                <span class="stat-card-label">用户输入</span>
+                            </div>
+                        </div>
+                        <div class="stat-card" data-type="Stop">
+                            <div class="stat-card-icon">✅</div>
+                            <div class="stat-card-info">
+                                <span class="stat-card-value" id="stat-Stop">0</span>
+                                <span class="stat-card-label">响应完成</span>
+                            </div>
+                        </div>
+                        <div class="stat-card" data-type="SubagentStop">
+                            <div class="stat-card-icon">🤖</div>
+                            <div class="stat-card-info">
+                                <span class="stat-card-value" id="stat-SubagentStop">0</span>
+                                <span class="stat-card-label">子代理</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 工具使用排行 -->
+                    <div class="tools-ranking">
+                        <h3>工具使用排行</h3>
+                        <div class="ranking-list" id="tools-ranking">
+                            <div class="ranking-empty">暂无数据</div>
+                        </div>
+                    </div>
+
+                    <!-- 活动图表 -->
+                    <div class="activity-chart">
+                        <h3>活动时间线</h3>
+                        <div class="chart-container" id="activity-chart">
+                            <canvas id="activity-canvas"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 右侧面板 - 事件流 -->
+            <section class="panel panel-events">
+                <div class="panel-header">
+                    <h2><span class="icon-pulse"></span>实时事件流</h2>
+                    <div class="panel-actions">
+                        <button class="btn btn-sm" id="clear-events">清空</button>
+                        <button class="btn btn-sm" id="pause-events">暂停</button>
+                    </div>
+                </div>
+                <div class="panel-body">
+                    <div class="event-list" id="event-list">
+                        <!-- 事件项将动态插入 -->
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- 底部状态栏 -->
+        <footer class="footer">
+            <div class="footer-left">
+                <span class="connection-info">
+                    <span class="dot" id="ws-dot"></span>
+                    WebSocket: <span id="ws-status">断开</span>
+                </span>
+            </div>
+            <div class="footer-center">
+                <span id="current-time"></span>
+            </div>
+            <div class="footer-right">
+                <span>Claude Code Monitor v1.0</span>
+            </div>
+        </footer>
+    </div>
+
+    <!-- 音频元素 -->
+    <audio id="audio-event" preload="auto"></audio>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>

@@ -19,11 +19,12 @@ LOG_FILE = os.path.join(SCRIPT_DIR, "hooks_log.txt")
 
 # 监控平台配置
 MONITOR_URL = "http://localhost:8765/api/event"
+CONFIG_URL = "http://localhost:8765/api/config"
 MONITOR_ENABLED = True
 
 # ============ 音频播放开关配置 ============
-# True = 播放音频, False = 静音
-SOUND_ENABLED = {
+# 默认值 - 如果无法从监控平台读取，则使用这些默认值
+DEFAULT_SOUND_ENABLED = {
     "PreToolUse": False,        # 工具调用前
     "PostToolUse": False,       # 工具调用后
     "PermissionRequest": True,  # 权限请求
@@ -35,6 +36,9 @@ SOUND_ENABLED = {
     "SessionStart": True,       # 会话开始
     "SessionEnd": True,        # 会话结束
 }
+
+# 动态加载的配置（从监控平台读取）
+SOUND_ENABLED = None
 # =========================================
 
 def send_to_monitor(event_type: str, data: dict = None):
@@ -91,6 +95,33 @@ def send_to_monitor(event_type: str, data: dict = None):
     thread = threading.Thread(target=_send)
     thread.daemon = True
     thread.start()
+
+
+def load_config_from_monitor():
+    """从监控平台加载配置"""
+    global SOUND_ENABLED
+
+    if SOUND_ENABLED is not None:
+        # 已经加载过配置
+        return SOUND_ENABLED
+
+    try:
+        import urllib.request
+        import urllib.error
+
+        req = urllib.request.Request(
+            CONFIG_URL,
+            headers={'Content-Type': 'application/json'}
+        )
+
+        with urllib.request.urlopen(req, timeout=1) as response:
+            config = json.loads(response.read().decode('utf-8'))
+            SOUND_ENABLED = config.get('sound_enabled', DEFAULT_SOUND_ENABLED)
+            return SOUND_ENABLED
+    except Exception as e:
+        # 无法连接到监控平台，使用默认配置
+        SOUND_ENABLED = DEFAULT_SOUND_ENABLED
+        return DEFAULT_SOUND_ENABLED
 
 def log_event(event_type: str, data: dict = None):
     """记录事件到日志文件并发送到监控平台"""
@@ -189,11 +220,14 @@ def handle_user_prompt_submit():
 
 def play_sound(event_type: str):
     """播放对应事件的音频"""
+    # 从监控平台加载配置
+    sound_config = load_config_from_monitor()
+
     # 添加调试日志
     with open(LOG_FILE, "a", encoding="utf-8") as f:
-        f.write(f"[DEBUG] play_sound 被调用: {event_type}, SOUND_ENABLED={SOUND_ENABLED.get(event_type, False)}\n")
+        f.write(f"[DEBUG] play_sound 被调用: {event_type}, SOUND_ENABLED={sound_config.get(event_type, False)}\n")
 
-    if not SOUND_ENABLED.get(event_type, False):
+    if not sound_config.get(event_type, False):
         return
 
     # 事件类型到音频文件名的映射

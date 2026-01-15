@@ -369,17 +369,20 @@ class ClaudeMonitor {
         const progressText = document.getElementById('todo-progress-text');
         const progressBar = document.getElementById('todo-progress-bar');
 
+        // 如果元素不存在，直接返回
+        if (!container) return;
+
         if (!this.todos || this.todos.length === 0) {
             container.innerHTML = '<div class="todo-empty"><div class="empty-icon">📋</div><p>暂无任务</p></div>';
-            progressText.textContent = '0/0';
-            progressBar.style.width = '0%';
+            if (progressText) progressText.textContent = '0/0';
+            if (progressBar) progressBar.style.width = '0%';
             return;
         }
 
         const completed = this.todos.filter(t => t.status === 'completed').length;
         const total = this.todos.length;
-        progressText.textContent = `${completed}/${total}`;
-        progressBar.style.width = `${total > 0 ? (completed / total * 100) : 0}%`;
+        if (progressText) progressText.textContent = `${completed}/${total}`;
+        if (progressBar) progressBar.style.width = `${total > 0 ? (completed / total * 100) : 0}%`;
 
         container.innerHTML = this.todos.map(todo => `
             <div class="todo-item" data-status="${todo.status}">
@@ -548,12 +551,6 @@ class ClaudeMonitor {
 
     // 事件监听
     initEventListeners() {
-        document.getElementById('sound-toggle').addEventListener('click', () => {
-            this.soundEnabled = !this.soundEnabled;
-            document.getElementById('sound-toggle').style.opacity = this.soundEnabled ? '1' : '0.5';
-            this.showSubtitle(this.soundEnabled ? '音频已开启' : '音频已关闭', 'info');
-        });
-
         document.getElementById('fullscreen-toggle').addEventListener('click', () => {
             if (!document.fullscreenElement) {
                 document.documentElement.requestFullscreen();
@@ -573,6 +570,121 @@ class ClaudeMonitor {
             document.getElementById('pause-events').textContent = this.isPaused ? '继续' : '暂停';
             this.showSubtitle(this.isPaused ? '事件流已暂停' : '事件流已恢复', 'info');
         });
+
+        // 设置按钮事件
+        document.getElementById('settings-toggle').addEventListener('click', () => {
+            this.openSettings();
+        });
+
+        document.getElementById('modal-close').addEventListener('click', () => {
+            this.closeSettings();
+        });
+
+        document.getElementById('settings-cancel').addEventListener('click', () => {
+            this.closeSettings();
+        });
+
+        document.getElementById('settings-save').addEventListener('click', () => {
+            this.saveSettings();
+        });
+
+        // 点击弹窗外部关闭
+        document.getElementById('settings-modal').addEventListener('click', (e) => {
+            if (e.target.id === 'settings-modal') {
+                this.closeSettings();
+            }
+        });
+    }
+
+    async openSettings() {
+        // 加载当前配置
+        try {
+            const response = await fetch('/api/config');
+            const config = await response.json();
+            this.currentConfig = config;
+
+            // 填充音频开关
+            const soundEnabled = config.sound_enabled || {};
+            Object.keys(soundEnabled).forEach(eventType => {
+                const checkbox = document.getElementById(`sound-${eventType}`);
+                if (checkbox) {
+                    checkbox.checked = soundEnabled[eventType];
+                }
+            });
+
+            // 填充钉钉配置
+            const dingtalk = config.dingtalk || {};
+            document.getElementById('dingtalk-enabled').checked = dingtalk.enabled || false;
+            document.getElementById('dingtalk-webhook').value = dingtalk.webhook_url || '';
+            document.getElementById('dingtalk-secret').value = dingtalk.secret || '';
+
+            // 填充钉钉事件选择
+            const dingtalkEvents = dingtalk.events || [];
+            document.querySelectorAll('.dingtalk-event').forEach(checkbox => {
+                checkbox.checked = dingtalkEvents.includes(checkbox.value);
+            });
+
+            // 显示弹窗
+            document.getElementById('settings-modal').classList.add('active');
+        } catch (error) {
+            console.error('加载配置失败:', error);
+            this.showSubtitle('加载配置失败', 'error');
+        }
+    }
+
+    closeSettings() {
+        document.getElementById('settings-modal').classList.remove('active');
+    }
+
+    async saveSettings() {
+        // 收集音频开关配置
+        const soundEnabled = {};
+        ['PreToolUse', 'PostToolUse', 'PermissionRequest', 'UserPromptSubmit',
+         'Notification', 'Stop', 'SubagentStop', 'PreCompact', 'SessionStart', 'SessionEnd'].forEach(eventType => {
+            const checkbox = document.getElementById(`sound-${eventType}`);
+            if (checkbox) {
+                soundEnabled[eventType] = checkbox.checked;
+            }
+        });
+
+        // 收集钉钉配置
+        const dingtalkEvents = [];
+        document.querySelectorAll('.dingtalk-event:checked').forEach(checkbox => {
+            dingtalkEvents.push(checkbox.value);
+        });
+
+        const config = {
+            sound_enabled: soundEnabled,
+            dingtalk: {
+                enabled: document.getElementById('dingtalk-enabled').checked,
+                webhook_url: document.getElementById('dingtalk-webhook').value,
+                secret: document.getElementById('dingtalk-secret').value,
+                events: dingtalkEvents
+            }
+        };
+
+        // 保存配置
+        try {
+            const response = await fetch('/api/config', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(config)
+            });
+
+            const result = await response.json();
+            if (result.status === 'ok') {
+                this.showSubtitle('配置已保存', 'success');
+                this.closeSettings();
+                this.currentConfig = config;
+            } else {
+                this.showSubtitle('配置保存失败: ' + result.message, 'error');
+            }
+        } catch (error) {
+            console.error('保存配置失败:', error);
+            this.showSubtitle('配置保存失败', 'error');
+        }
     }
 }
 

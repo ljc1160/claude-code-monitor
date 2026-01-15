@@ -22,6 +22,7 @@ BASE_DIR = Path(__file__).parent
 HOOKS_LOG_FILE = BASE_DIR.parent / "hooks_log.txt"
 STATIC_DIR = BASE_DIR / "static"
 TEMPLATES_DIR = BASE_DIR / "templates"
+CONFIG_FILE = BASE_DIR / "config.json"
 
 app = FastAPI(title="Claude Code Monitor", version="1.0.0")
 
@@ -127,6 +128,56 @@ class ConnectionManager:
 manager = ConnectionManager()
 
 
+# 默认配置
+DEFAULT_CONFIG = {
+    "sound_enabled": {
+        "PreToolUse": False,
+        "PostToolUse": False,
+        "PermissionRequest": True,
+        "UserPromptSubmit": True,
+        "Notification": True,
+        "Stop": True,
+        "SubagentStop": True,
+        "PreCompact": True,
+        "SessionStart": True,
+        "SessionEnd": True,
+    },
+    "dingtalk": {
+        "enabled": False,
+        "webhook_url": "",
+        "secret": "",
+        "events": []
+    }
+}
+
+
+def load_config() -> Dict:
+    """加载配置文件"""
+    if CONFIG_FILE.exists():
+        try:
+            with open(CONFIG_FILE, "r", encoding="utf-8") as f:
+                config = json.load(f)
+                # 合并默认配置，确保新增字段存在
+                for key in DEFAULT_CONFIG:
+                    if key not in config:
+                        config[key] = DEFAULT_CONFIG[key]
+                return config
+        except Exception as e:
+            print(f"加载配置失败: {e}")
+    return DEFAULT_CONFIG.copy()
+
+
+def save_config(config: Dict) -> bool:
+    """保存配置文件"""
+    try:
+        with open(CONFIG_FILE, "w", encoding="utf-8") as f:
+            json.dump(config, f, ensure_ascii=False, indent=2)
+        return True
+    except Exception as e:
+        print(f"保存配置失败: {e}")
+        return False
+
+
 @app.get("/", response_class=HTMLResponse)
 async def get_dashboard():
     """返回监控看板页面"""
@@ -204,6 +255,26 @@ async def get_stats():
 async def get_history(limit: int = 100):
     """获取历史事件"""
     return manager.event_history[-limit:]
+
+
+@app.get("/api/config")
+async def get_config():
+    """获取配置"""
+    return load_config()
+
+
+@app.post("/api/config")
+async def update_config(config: Dict):
+    """更新配置"""
+    if save_config(config):
+        # 广播配置更新
+        await manager.broadcast({
+            "type": "config_updated",
+            "data": config
+        })
+        return {"status": "ok", "message": "配置已保存"}
+    else:
+        return {"status": "error", "message": "配置保存失败"}
 
 
 async def watch_log_file():

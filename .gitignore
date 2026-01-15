@@ -1,0 +1,26 @@
+# 日志文件
+hooks_log.txt
+
+# 配置文件（包含用户个性化设置）
+monitor/config.json
+
+# Python 缓存
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# 虚拟环境
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 操作系统
+.DS_Store
+Thumbs.db

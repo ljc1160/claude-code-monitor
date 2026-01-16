@@ -289,6 +289,10 @@ def handle_notification():
     - 用于自定义通知行为（如播放声音、发送到其他服务等）
     - 输入: stdin 接收 JSON，包含通知内容
     """
+    # 添加调试：记录函数被调用
+    with open(LOG_FILE, "a", encoding="utf-8") as f:
+        f.write(f"[DEBUG] handle_notification() 被调用, PID={os.getpid()}, 时间={datetime.now().isoformat()}\n")
+
     stdin_data = sys.stdin.read()
     try:
         data = json.loads(stdin_data) if stdin_data else {}

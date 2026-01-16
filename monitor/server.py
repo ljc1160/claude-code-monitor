@@ -60,6 +60,8 @@ class ConnectionManager:
             "events_by_type": {},
             "tools_used": {},
         }
+        # 会话超时时间（秒）- 30分钟没有活动就标记为非活跃
+        self.session_timeout = 1800
 
     async def connect(self, websocket: WebSocket):
         await websocket.accept()
@@ -112,9 +114,16 @@ class ConnectionManager:
 
             self.stats["tools_used"][tool_name] = self.stats["tools_used"].get(tool_name, 0) + 1
 
-        # 更新会话信息
+        # 处理会话信息
         session_info = event.get("session", {})
         session_id = session_info.get("session_id")
+
+        # 如果是 SessionEnd 事件，移除该会话
+        if event_type == "SessionEnd" and session_id:
+            self.remove_session(session_id)
+            return
+
+        # 更新会话信息（排除 SessionEnd）
         if session_id:
             self.sessions[session_id] = {
                 "session_id": session_id,
@@ -129,6 +138,35 @@ class ConnectionManager:
     def update_todos(self, todos: List[Dict]):
         """更新任务列表"""
         self.todos = todos
+
+    def remove_session(self, session_id: str):
+        """移除指定会话"""
+        if session_id in self.sessions:
+            del self.sessions[session_id]
+            print(f"[INFO] 会话已移除: {session_id}")
+
+    def cleanup_expired_sessions(self):
+        """清理过期的会话"""
+        now = datetime.now()
+        expired_sessions = []
+
+        for session_id, session_info in self.sessions.items():
+            last_event_str = session_info.get("last_event")
+            if last_event_str:
+                try:
+                    last_event = datetime.fromisoformat(last_event_str)
+                    elapsed = (now - last_event).total_seconds()
+                    if elapsed > self.session_timeout:
+                        expired_sessions.append(session_id)
+                except Exception as e:
+                    print(f"[ERROR] 解析会话时间失败: {e}")
+
+        # 移除过期会话
+        for session_id in expired_sessions:
+            del self.sessions[session_id]
+            print(f"[INFO] 清理过期会话: {session_id}")
+
+        return len(expired_sessions)
 
 
 manager = ConnectionManager()
@@ -158,19 +196,27 @@ DEFAULT_CONFIG = {
 
 
 def load_config() -> Dict:
-    """加载配置文件"""
-    if CONFIG_FILE.exists():
-        try:
-            with open(CONFIG_FILE, "r", encoding="utf-8") as f:
-                config = json.load(f)
-                # 合并默认配置，确保新增字段存在
-                for key in DEFAULT_CONFIG:
-                    if key not in config:
-                        config[key] = DEFAULT_CONFIG[key]
-                return config
-        except Exception as e:
-            print(f"加载配置失败: {e}")
-    return DEFAULT_CONFIG.copy()
+    """加载配置文件,如果不存在则创建默认配置"""
+    if not CONFIG_FILE.exists():
+        # 首次运行,自动创建配置文件
+        print(f"配置文件不存在,创建默认配置: {CONFIG_FILE}")
+        save_config(DEFAULT_CONFIG.copy())
+        print("✓ 已创建默认配置文件")
+        print("  提示: 部分事件(如 PermissionRequest, UserPromptSubmit)默认启用音频提醒")
+        print("  如需修改,请访问监控页面点击设置按钮")
+        return DEFAULT_CONFIG.copy()
+
+    try:
+        with open(CONFIG_FILE, "r", encoding="utf-8") as f:
+            config = json.load(f)
+            # 合并默认配置，确保新增字段存在
+            for key in DEFAULT_CONFIG:
+                if key not in config:
+                    config[key] = DEFAULT_CONFIG[key]
+            return config
+    except Exception as e:
+        print(f"加载配置失败: {e},使用默认配置")
+        return DEFAULT_CONFIG.copy()
 
 
 def save_config(config: Dict) -> bool:
@@ -323,6 +369,15 @@ async def update_todos(todos: List[Dict]):
 async def get_stats():
     """获取统计信息"""
     return manager.stats
+
+
+@app.get("/api/sessions")
+async def get_sessions():
+    """获取当前会话列表"""
+    return {
+        "count": len(manager.sessions),
+        "sessions": manager.sessions
+    }
 
 
 @app.get("/api/history")
@@ -489,10 +544,32 @@ def parse_log_entries(content: str) -> List[Dict]:
     return entries
 
 
+async def cleanup_sessions_periodically():
+    """定期清理过期会话的后台任务"""
+    while True:
+        try:
+            # 每5分钟清理一次
+            await asyncio.sleep(300)
+            cleaned = manager.cleanup_expired_sessions()
+            if cleaned > 0:
+                # 广播会话更新
+                await manager.broadcast({
+                    "type": "sessions",
+                    "data": manager.sessions
+                })
+                print(f"[INFO] 定期清理: 移除了 {cleaned} 个过期会话")
+        except Exception as e:
+            print(f"[ERROR] 清理会话时出错: {e}")
+
+
 @app.on_event("startup")
 async def startup_event():
     """启动时开始监控日志文件"""
-    asyncio.create_task(watch_log_file())
+    # 禁用日志文件监控，避免重复触发事件和音频播放
+    # asyncio.create_task(watch_log_file())
+
+    # 启动定期清理过期会话的后台任务
+    asyncio.create_task(cleanup_sessions_periodically())
 
 
 if __name__ == "__main__":

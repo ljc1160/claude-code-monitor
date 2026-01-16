@@ -189,9 +189,10 @@ class ClaudeMonitor {
             : `${eventName}: ${summary}`;
         this.showSubtitle(subtitleText, 'info');
 
-        if (this.soundEnabled) {
-            this.playEventSound(event.event_type);
-        }
+        // 音频播放由后端 claude_hooks.py 处理，前端不再播放
+        // if (this.soundEnabled) {
+        //     this.playEventSound(event.event_type);
+        // }
 
         this.stats.total_events++;
         const type = event.event_type;

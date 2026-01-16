@@ -110,30 +110,16 @@ class ClaudeMonitor {
     }
 
     handleInit(data) {
+        if (data.stats) {
+            // 直接使用后端的统计数据，不需要前端重新统计
+            this.stats = data.stats;
+            this.updateStats();
+        }
         if (data.history) {
-            // 重新统计历史事件
+            // 只显示历史事件，不重新统计（统计由后端完成）
             data.history.forEach(event => {
                 this.addEventToList(event, false);
-
-                // 统计工具使用
-                const type = event.event_type;
-                if (type === 'PreToolUse' || type === 'PostToolUse') {
-                    // tool_name 在事件对象的第一层，不在 data 中
-                    const toolName = event.tool_name || (event.data && event.data.tool_name) || 'unknown';
-                    this.stats.tools_used[toolName] = (this.stats.tools_used[toolName] || 0) + 1;
-                }
-
-                // 统计事件类型
-                this.stats.events_by_type[type] = (this.stats.events_by_type[type] || 0) + 1;
             });
-
-            // 更新总事件数
-            this.stats.total_events = data.history.length;
-        }
-        if (data.stats) {
-            // 合并后端统计数据（如果有的话）
-            this.stats = { ...this.stats, ...data.stats };
-            this.updateStats();
         }
         if (data.todos) {
             this.handleTodos(data.todos);
@@ -199,8 +185,8 @@ class ClaudeMonitor {
         this.stats.events_by_type[type] = (this.stats.events_by_type[type] || 0) + 1;
 
         if (type === 'PreToolUse' || type === 'PostToolUse') {
-            // tool_name 在事件对象的第一层，不在 data 中
-            const toolName = event.tool_name || (event.data && event.data.tool_name) || 'unknown';
+            // tool_name 在 event.data 中
+            const toolName = (event.data && event.data.tool_name) || 'unknown';
             this.stats.tools_used[toolName] = (this.stats.tools_used[toolName] || 0) + 1;
         }
         this.updateStats();
@@ -261,7 +247,8 @@ class ClaudeMonitor {
     getEventDetails(event) {
         const data = event.data || {};
         if (event.event_type === 'PreToolUse' || event.event_type === 'PostToolUse') {
-            return `工具: ${data.tool_name || '未知'}`;
+            const toolName = data.tool_name || '未知';
+            return `工具: ${toolName}`;
         }
         if (event.event_type === 'UserPromptSubmit') {
             const prompt = data.prompt || '';

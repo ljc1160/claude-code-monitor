@@ -15,7 +15,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python \"E:\\claude-code\\claude_hooks.py\" PreToolUse"
+            "command": "python \"{{PROJECT_DIR}}\\claude_hooks.py\" PreToolUse"
           }
         ]
       }
@@ -26,7 +26,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python \"E:\\claude-code\\claude_hooks.py\" PostToolUse"
+            "command": "python \"{{PROJECT_DIR}}\\claude_hooks.py\" PostToolUse"
           }
         ]
       }
@@ -37,7 +37,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python \"E:\\claude-code\\claude_hooks.py\" PermissionRequest"
+            "command": "python \"{{PROJECT_DIR}}\\claude_hooks.py\" PermissionRequest"
           }
         ]
       }
@@ -48,7 +48,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python \"E:\\claude-code\\claude_hooks.py\" UserPromptSubmit"
+            "command": "python \"{{PROJECT_DIR}}\\claude_hooks.py\" UserPromptSubmit"
           }
         ]
       }
@@ -59,7 +59,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python \"E:\\claude-code\\claude_hooks.py\" Notification"
+            "command": "python \"{{PROJECT_DIR}}\\claude_hooks.py\" Notification"
           }
         ]
       }
@@ -70,7 +70,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python \"E:\\claude-code\\claude_hooks.py\" Stop"
+            "command": "python \"{{PROJECT_DIR}}\\claude_hooks.py\" Stop"
           }
         ]
       }
@@ -81,7 +81,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python \"E:\\claude-code\\claude_hooks.py\" SubagentStop"
+            "command": "python \"{{PROJECT_DIR}}\\claude_hooks.py\" SubagentStop"
           }
         ]
       }
@@ -92,7 +92,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python \"E:\\claude-code\\claude_hooks.py\" PreCompact"
+            "command": "python \"{{PROJECT_DIR}}\\claude_hooks.py\" PreCompact"
           }
         ]
       }
@@ -103,7 +103,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python \"E:\\claude-code\\claude_hooks.py\" SessionStart"
+            "command": "python \"{{PROJECT_DIR}}\\claude_hooks.py\" SessionStart"
           }
         ]
       }
@@ -114,7 +114,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python \"E:\\claude-code\\claude_hooks.py\" SessionEnd"
+            "command": "python \"{{PROJECT_DIR}}\\claude_hooks.py\" SessionEnd"
           }
         ]
       }

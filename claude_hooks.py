@@ -18,8 +18,8 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 LOG_FILE = os.path.join(SCRIPT_DIR, "hooks_log.txt")
 
 # 监控平台配置
-MONITOR_URL = "http://localhost:8765/api/event"
-CONFIG_URL = "http://localhost:8765/api/config"
+MONITOR_URL = "http://localhost:18765/api/event"
+CONFIG_URL = "http://localhost:18765/api/config"
 MONITOR_ENABLED = True
 
 # ============ 音频播放开关配置 ============

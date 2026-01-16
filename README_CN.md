@@ -52,7 +52,7 @@ cd monitor
 python server.py
 
 # 6. 访问监控面板
-# 浏览器打开 http://localhost:8765
+# 浏览器打开 http://localhost:18765
 ```
 
 ## 文件结构
@@ -103,11 +103,11 @@ python cosy_voice_tts_save.py
 
 #### 音频开关控制
 
-访问 **http://localhost:8765/config** 可在 Web 界面动态开关各事件的音频播放。
+访问 **http://localhost:18765/config** 可在 Web 界面动态开关各事件的音频播放。
 
 ### 3. 钉钉推送配置
 
-访问 **http://localhost:8765/config** 设置：
+访问 **http://localhost:18765/config** 设置：
 - 钉钉机器人 Webhook URL
 - AccessToken（可选）
 

@@ -20,7 +20,7 @@ pip install -r requirements.txt
 python server.py
 
 # 3. 访问监控面板
-# 浏览器打开 http://localhost:8765
+# 浏览器打开 http://localhost:18765
 ```
 
 ## 文件结构

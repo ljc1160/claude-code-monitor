@@ -1,7 +1,40 @@
 # coding=utf-8
 import os
+import sys
+import subprocess
 import time
 import wave
+
+# 自动安装依赖
+def auto_install_requirements():
+    """检查并安装缺失的依赖包"""
+    required_packages = ['dashscope']
+    missing_packages = []
+
+    for package in required_packages:
+        try:
+            __import__(package)
+        except ImportError:
+            missing_packages.append(package)
+
+    if missing_packages:
+        print(f"检测到缺失的依赖包: {', '.join(missing_packages)}")
+        print("正在自动安装...")
+
+        for package in missing_packages:
+            try:
+                subprocess.check_call([sys.executable, "-m", "pip", "install", package])
+                print(f"✓ {package} 安装成功")
+            except subprocess.CalledProcessError as e:
+                print(f"✗ {package} 安装失败: {e}")
+                print(f"\n请手动执行: pip install {package}")
+                sys.exit(1)
+
+        print("所有依赖包安装完成！\n")
+
+# 执行自动安装
+auto_install_requirements()
+
 import dashscope
 from dashscope.audio.tts_v2 import *
 

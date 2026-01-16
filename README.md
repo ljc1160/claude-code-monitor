@@ -52,7 +52,7 @@ cd monitor
 python server.py
 
 # 6. Open the dashboard
-# Visit http://localhost:8765 in your browser
+# Visit http://localhost:18765 in your browser
 ```
 
 ## Project Structure
@@ -103,11 +103,11 @@ Audio files will be saved to `monitor/static/audio/` directory. Supported event 
 
 #### Audio Control
 
-Visit **http://localhost:8765/config** to toggle audio playback for each event in the web interface.
+Visit **http://localhost:18765/config** to toggle audio playback for each event in the web interface.
 
 ### 3. DingTalk Push Configuration
 
-Visit **http://localhost:8765/config** to configure:
+Visit **http://localhost:18765/config** to configure:
 - DingTalk robot Webhook URL
 - AccessToken (optional)
 

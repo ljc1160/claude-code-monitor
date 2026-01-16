@@ -83,11 +83,11 @@ echo -e "${BLUE}[Step 3/3] Opening browser...${NC}"
 # 根据系统打开浏览器
 if [[ "$OSTYPE" == "darwin"* ]]; then
     # macOS
-    open http://localhost:8765
+    open http://localhost:18765
 elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
     # Linux
     if command -v xdg-open &> /dev/null; then
-        xdg-open http://localhost:8765
+        xdg-open http://localhost:18765
     fi
 fi
 
@@ -95,8 +95,8 @@ echo ""
 echo "============================================"
 echo "   Monitor is running!"
 echo "============================================"
-echo "   URL: http://localhost:8765"
-echo "   Config: http://localhost:8765/config"
+echo "   URL: http://localhost:18765"
+echo "   Config: http://localhost:18765/config"
 echo ""
 echo "   Server PID: $SERVER_PID"
 echo ""

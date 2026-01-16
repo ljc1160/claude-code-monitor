@@ -125,14 +125,14 @@ echo Waiting for server to start...
 timeout /t 3 /nobreak >nul
 
 echo [Step 3/3] Opening browser...
-start http://localhost:8765
+start http://localhost:18765
 
 echo.
 echo ============================================
 echo   Monitor is running!
 echo ============================================
-echo   URL: http://localhost:8765
-echo   Config: http://localhost:8765/config
+echo   URL: http://localhost:18765
+echo   Config: http://localhost:18765/config
 echo.
 echo Press any key to stop the monitor...
 echo ============================================

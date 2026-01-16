@@ -588,6 +588,11 @@ class ClaudeMonitor {
             this.saveSettings();
         });
 
+        // 测试钉钉推送
+        document.getElementById('test-dingtalk').addEventListener('click', async () => {
+            await this.testDingtalk();
+        });
+
         // 点击弹窗外部关闭
         document.getElementById('settings-modal').addEventListener('click', (e) => {
             if (e.target.id === 'settings-modal') {
@@ -684,6 +689,37 @@ class ClaudeMonitor {
         } catch (error) {
             console.error('保存配置失败:', error);
             this.showSubtitle('配置保存失败', 'error');
+        }
+    }
+
+    async testDingtalk() {
+        const button = document.getElementById('test-dingtalk');
+        const originalText = button.textContent;
+
+        try {
+            button.disabled = true;
+            button.textContent = '发送中...';
+
+            const response = await fetch('/api/test-dingtalk', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            const result = await response.json();
+
+            if (result.status === 'ok') {
+                this.showSubtitle('✅ ' + result.message, 'success');
+            } else {
+                this.showSubtitle('❌ ' + result.message, 'error');
+            }
+        } catch (error) {
+            console.error('测试钉钉推送失败:', error);
+            this.showSubtitle('❌ 测试失败: ' + error.message, 'error');
+        } finally {
+            button.disabled = false;
+            button.textContent = originalText;
         }
     }
 }

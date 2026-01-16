@@ -137,8 +137,12 @@ def log_event(event_type: str, data: dict = None):
     # 同时输出到 stderr 以便调试
     print(f"[HOOK] {event_type}", file=sys.stderr)
 
+    # 提取纯事件类型（去掉描述部分）
+    # 例如: "SessionStart - 会话开始" -> "SessionStart"
+    pure_event_type = event_type.split(" - ")[0] if " - " in event_type else event_type
+
     # 发送到监控平台
-    send_to_monitor(event_type, data)
+    send_to_monitor(pure_event_type, data)
 
 def handle_pre_tool_use():
     """

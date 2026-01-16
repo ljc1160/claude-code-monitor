@@ -10,12 +10,18 @@ import os
 from datetime import datetime
 from typing import Dict, List, Set
 from pathlib import Path
+import time
+import hmac
+import hashlib
+import base64
+import urllib.parse
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
+import httpx
 
 # 配置
 BASE_DIR = Path(__file__).parent
@@ -178,6 +184,70 @@ def save_config(config: Dict) -> bool:
         return False
 
 
+async def send_dingtalk_notification(event: Dict, config: Dict):
+    """发送钉钉通知"""
+    dingtalk_config = config.get("dingtalk", {})
+
+    # 检查是否启用
+    if not dingtalk_config.get("enabled", False):
+        return
+
+    # 检查是否需要推送此事件
+    event_type = event.get("event_type", "")
+    allowed_events = dingtalk_config.get("events", [])
+    if event_type not in allowed_events:
+        return
+
+    webhook_url = dingtalk_config.get("webhook_url", "")
+    secret = dingtalk_config.get("secret", "")
+
+    if not webhook_url:
+        return
+
+    try:
+        # 如果配置了 secret，生成签名
+        if secret:
+            timestamp = str(round(time.time() * 1000))
+            sign_string = f"{timestamp}\n{secret}"
+            hmac_code = hmac.new(
+                secret.encode("utf-8"),
+                sign_string.encode("utf-8"),
+                digestmod=hashlib.sha256
+            ).digest()
+            sign = urllib.parse.quote_plus(base64.b64encode(hmac_code))
+            webhook_url = f"{webhook_url}&timestamp={timestamp}&sign={sign}"
+
+        # 构建消息内容
+        session_info = event.get("session", {})
+        event_name = event.get("event_name", event_type)
+        project_name = session_info.get("project_name", "未知项目")
+
+        # 格式化消息
+        message = {
+            "msgtype": "markdown",
+            "markdown": {
+                "title": f"Claude Code 事件通知",
+                "text": f"### 🤖 Claude Code 事件通知\n\n"
+                        f"**事件类型**: {event_name}\n\n"
+                        f"**项目**: {project_name}\n\n"
+                        f"**时间**: {event.get('timestamp', '')}\n\n"
+            }
+        }
+
+        # 发送请求
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            response = await client.post(webhook_url, json=message)
+            if response.status_code == 200:
+                result = response.json()
+                if result.get("errcode") != 0:
+                    print(f"钉钉推送失败: {result.get('errmsg')}")
+            else:
+                print(f"钉钉推送失败: HTTP {response.status_code}")
+
+    except Exception as e:
+        print(f"钉钉推送异常: {e}")
+
+
 @app.get("/", response_class=HTMLResponse)
 async def get_dashboard():
     """返回监控看板页面"""
@@ -229,6 +299,10 @@ async def receive_event(event: Dict):
             "data": manager.sessions
         })
 
+    # 发送钉钉通知
+    config = load_config()
+    await send_dingtalk_notification(event, config)
+
     return {"status": "ok"}
 
 
@@ -275,6 +349,33 @@ async def update_config(config: Dict):
         return {"status": "ok", "message": "配置已保存"}
     else:
         return {"status": "error", "message": "配置保存失败"}
+
+
+@app.post("/api/test-dingtalk")
+async def test_dingtalk():
+    """测试钉钉推送"""
+    config = load_config()
+
+    # 构造测试事件
+    test_event = {
+        "event_type": "Stop",
+        "event_name": "Stop - 测试通知",
+        "timestamp": datetime.now().isoformat(),
+        "session": {
+            "project_name": "Claude Code Monitor",
+            "hostname": "测试主机",
+            "username": "测试用户"
+        },
+        "data": {
+            "message": "这是一条测试消息，用于验证钉钉推送功能"
+        }
+    }
+
+    try:
+        await send_dingtalk_notification(test_event, config)
+        return {"status": "ok", "message": "测试消息已发送，请检查钉钉群"}
+    except Exception as e:
+        return {"status": "error", "message": f"发送失败: {str(e)}"}
 
 
 async def watch_log_file():

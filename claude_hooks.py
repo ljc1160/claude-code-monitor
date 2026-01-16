@@ -41,6 +41,23 @@ DEFAULT_SOUND_ENABLED = {
 SOUND_ENABLED = None
 # =========================================
 
+def read_stdin_data():
+    """统一处理 stdin 读取，确保在 Windows 下正确处理 UTF-8 编码"""
+    try:
+        # 直接从 buffer 读取原始字节，然后用 UTF-8 解码
+        raw_data = sys.stdin.buffer.read()
+        decoded_data = raw_data.decode('utf-8')
+        return json.loads(decoded_data) if decoded_data else {}
+    except UnicodeDecodeError:
+        # 如果 UTF-8 解码失败，尝试系统默认编码
+        try:
+            decoded_data = raw_data.decode(sys.getdefaultencoding())
+            return json.loads(decoded_data) if decoded_data else {}
+        except:
+            return {"raw": raw_data.hex(), "decode_error": "Failed to decode with UTF-8 and system encoding"}
+    except Exception as e:
+        return {"error": str(e)}
+
 def send_to_monitor(event_type: str, data: dict = None):
     """异步发送事件到监控平台"""
     if not MONITOR_ENABLED:
@@ -135,7 +152,12 @@ def log_event(event_type: str, data: dict = None):
         f.write(log_entry)
 
     # 同时输出到 stderr 以便调试
-    print(f"[HOOK] {event_type}", file=sys.stderr)
+    # 在 Windows 下处理编码问题
+    try:
+        print(f"[HOOK] {event_type}", file=sys.stderr)
+    except UnicodeEncodeError:
+        # 如果编码失败，使用 ASCII 安全的输出
+        print(f"[HOOK] {event_type.encode('ascii', 'ignore').decode('ascii')}", file=sys.stderr)
 
     # 提取纯事件类型（去掉描述部分）
     # 例如: "SessionStart - 会话开始" -> "SessionStart"
@@ -151,12 +173,7 @@ def handle_pre_tool_use():
     - 输入: stdin 接收 JSON，包含 tool_name, tool_input 等
     - 输出: 可返回 {"decision": "block", "reason": "..."} 来阻止
     """
-    stdin_data = sys.stdin.read()
-
-    try:
-        data = json.loads(stdin_data) if stdin_data else {}
-    except Exception as e:
-        data = {"raw": stdin_data}
+    data = read_stdin_data()
 
     log_event("PreToolUse - 工具调用前", data)
     play_sound("PreToolUse")
@@ -171,11 +188,7 @@ def handle_post_tool_use():
     - 用于记录或处理工具调用结果
     - 输入: stdin 接收 JSON，包含 tool_name, tool_input, tool_output 等
     """
-    stdin_data = sys.stdin.read()
-    try:
-        data = json.loads(stdin_data) if stdin_data else {}
-    except:
-        data = {"raw": stdin_data}
+    data = read_stdin_data()
 
     log_event("PostToolUse - 工具调用后", data)
     play_sound("PostToolUse")
@@ -187,11 +200,7 @@ def handle_permission_request():
     - 输入: stdin 接收 JSON，包含权限请求详情
     - 输出: 可返回 {"decision": "allow"} 或 {"decision": "deny", "reason": "..."}
     """
-    stdin_data = sys.stdin.read()
-    try:
-        data = json.loads(stdin_data) if stdin_data else {}
-    except:
-        data = {"raw": stdin_data}
+    data = read_stdin_data()
 
     log_event("PermissionRequest - 权限请求", data)
     play_sound("PermissionRequest")
@@ -206,6 +215,11 @@ def handle_user_prompt_submit():
     - 可以修改或阻止用户输入
     - 输入: stdin 接收 JSON，包含用户提示内容
     """
+    # 在 Windows 下确保正确读取 UTF-8 编码的 stdin
+    if sys.platform == "win32":
+        import io
+        sys.stdin = io.TextIOWrapper(sys.stdin.buffer, encoding='utf-8')
+
     stdin_data = sys.stdin.read()
     try:
         data = json.loads(stdin_data) if stdin_data else {}
@@ -267,11 +281,7 @@ def handle_notification():
     - 用于自定义通知行为（如播放声音、发送到其他服务等）
     - 输入: stdin 接收 JSON，包含通知内容
     """
-    stdin_data = sys.stdin.read()
-    try:
-        data = json.loads(stdin_data) if stdin_data else {}
-    except:
-        data = {"raw": stdin_data}
+    data = read_stdin_data()
 
     log_event("Notification - 通知", data)
     play_sound("Notification")
@@ -282,11 +292,7 @@ def handle_stop():
     - 用于在响应完成后执行清理或后续操作
     - 输入: stdin 接收 JSON，包含响应相关信息
     """
-    stdin_data = sys.stdin.read()
-    try:
-        data = json.loads(stdin_data) if stdin_data else {}
-    except:
-        data = {"raw": stdin_data}
+    data = read_stdin_data()
 
     log_event("Stop - 响应完成", data)
     play_sound("Stop")
@@ -297,11 +303,7 @@ def handle_subagent_stop():
     - 用于在子代理（Task tool）完成后执行操作
     - 输入: stdin 接收 JSON，包含子代理任务信息
     """
-    stdin_data = sys.stdin.read()
-    try:
-        data = json.loads(stdin_data) if stdin_data else {}
-    except:
-        data = {"raw": stdin_data}
+    data = read_stdin_data()
 
     log_event("SubagentStop - 子代理完成", data)
     play_sound("SubagentStop")
@@ -312,11 +314,7 @@ def handle_pre_compact():
     - 压缩操作用于减少上下文长度
     - 输入: stdin 接收 JSON，包含压缩相关信息
     """
-    stdin_data = sys.stdin.read()
-    try:
-        data = json.loads(stdin_data) if stdin_data else {}
-    except:
-        data = {"raw": stdin_data}
+    data = read_stdin_data()
 
     log_event("PreCompact - 压缩前", data)
     play_sound("PreCompact")
@@ -327,11 +325,7 @@ def handle_session_start():
     - 用于初始化操作
     - 输入: stdin 接收 JSON，包含会话信息
     """
-    stdin_data = sys.stdin.read()
-    try:
-        data = json.loads(stdin_data) if stdin_data else {}
-    except:
-        data = {"raw": stdin_data}
+    data = read_stdin_data()
 
     log_event("SessionStart - 会话开始", data)
     play_sound("SessionStart")
@@ -342,11 +336,7 @@ def handle_session_end():
     - 用于清理操作
     - 输入: stdin 接收 JSON，包含会话信息
     """
-    stdin_data = sys.stdin.read()
-    try:
-        data = json.loads(stdin_data) if stdin_data else {}
-    except:
-        data = {"raw": stdin_data}
+    data = read_stdin_data()
 
     log_event("SessionEnd - 会话结束", data)
     play_sound("SessionEnd")

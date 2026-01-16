@@ -27,14 +27,14 @@ MONITOR_ENABLED = True
 DEFAULT_SOUND_ENABLED = {
     "PreToolUse": False,        # 工具调用前
     "PostToolUse": False,       # 工具调用后
-    "PermissionRequest": True,  # 权限请求
-    "UserPromptSubmit": True,  # 用户提交提示
-    "Notification": True,       # 通知（建议保持开启）
-    "Stop": True,               # 响应完成
-    "SubagentStop": True,       # 子代理完成
-    "PreCompact": True,        # 压缩前
-    "SessionStart": True,       # 会话开始
-    "SessionEnd": True,        # 会话结束
+    "PermissionRequest": False,  # 权限请求
+    "UserPromptSubmit": False,  # 用户提交提示
+    "Notification": False,       # 通知（建议保持开启）
+    "Stop": False,               # 响应完成
+    "SubagentStop": False,       # 子代理完成
+    "PreCompact": False,        # 压缩前
+    "SessionStart": False,       # 会话开始
+    "SessionEnd": False,        # 会话结束
 }
 
 # 动态加载的配置（从监控平台读取）

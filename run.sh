@@ -40,7 +40,7 @@ if [ $NEED_INSTALL -eq 1 ]; then
     echo ""
 
     echo "Installing Python dependencies..."
-    pip3 install -r requirements.txt
+    pip3 install -r monitor/requirements.txt
     if [ $? -ne 0 ]; then
         echo -e "${RED}[ERROR] Failed to install dependencies!${NC}"
         exit 1

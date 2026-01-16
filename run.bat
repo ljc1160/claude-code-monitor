@@ -39,7 +39,7 @@ REM Check if installation is needed
 set NEED_INSTALL=0
 
 REM Check if dependencies are installed
-pip show fastapi >nul 2>&1
+%PYTHON_CMD% -m pip show fastapi >nul 2>&1
 if errorlevel 1 set NEED_INSTALL=1
 
 REM Check if hooks are configured
@@ -50,8 +50,24 @@ if %NEED_INSTALL%==1 (
     echo [Step 1/3] First time setup detected, installing...
     echo.
 
+    REM Check if pip is available
+    echo Checking pip installation...
+    %PYTHON_CMD% -m pip --version >nul 2>&1
+    if errorlevel 1 (
+        echo [WARNING] pip not found, attempting to install...
+        %PYTHON_CMD% -m ensurepip --default-pip
+        if errorlevel 1 (
+            echo [ERROR] Failed to install pip!
+            echo Please install pip manually: https://pip.pypa.io/en/stable/installation/
+            pause
+            exit /b 1
+        )
+        echo [OK] pip installed successfully
+    )
+    echo.
+
     echo Installing Python dependencies...
-    pip install -r requirements.txt
+    %PYTHON_CMD% -m pip install -r monitor\requirements.txt
     if errorlevel 1 (
         echo [ERROR] Failed to install dependencies!
         pause

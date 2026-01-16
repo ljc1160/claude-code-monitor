@@ -53,18 +53,18 @@ def send_to_monitor(event_type: str, data: dict = None):
             import socket
             import getpass
 
-            # 获取会话信息 - 包含更多识别信息
-            session_id = os.environ.get('CLAUDE_SESSION_ID', '')
+            # 获取会话信息 - 优先使用 data 中的 session_id
+            session_id = (data or {}).get('session_id') or os.environ.get('CLAUDE_SESSION_ID', '')
             if not session_id:
-                # 如果没有环境变量，生成一个基于进程和时间的ID
                 session_id = f"pid_{os.getpid()}_{int(datetime.now().timestamp())}"
 
-            # 获取项目名称（当前目录名）
-            project_name = os.path.basename(os.getcwd())
+            # 获取项目名称（优先使用 data 中的 cwd，否则使用当前目录）
+            cwd = (data or {}).get('cwd') or os.getcwd()
+            project_name = os.path.basename(cwd)
 
             session_info = {
                 "session_id": session_id,
-                "project_path": os.getcwd(),
+                "project_path": cwd,
                 "project_name": project_name,
                 "hostname": socket.gethostname(),
                 "username": getpass.getuser(),
@@ -153,17 +153,10 @@ def handle_pre_tool_use():
     """
     stdin_data = sys.stdin.read()
 
-    # 调试：记录 stdin 内容
-    with open(LOG_FILE, "a", encoding="utf-8") as f:
-        f.write(f"[DEBUG] stdin_data length: {len(stdin_data) if stdin_data else 0}\n")
-        f.write(f"[DEBUG] stdin_data content: {repr(stdin_data[:500]) if stdin_data else 'None'}\n")
-
     try:
         data = json.loads(stdin_data) if stdin_data else {}
     except Exception as e:
         data = {"raw": stdin_data}
-        with open(LOG_FILE, "a", encoding="utf-8") as f:
-            f.write(f"[DEBUG] JSON parse error: {e}\n")
 
     log_event("PreToolUse - 工具调用前", data)
     play_sound("PreToolUse")
@@ -227,10 +220,6 @@ def play_sound(event_type: str):
     # 从监控平台加载配置
     sound_config = load_config_from_monitor()
 
-    # 添加调试日志
-    with open(LOG_FILE, "a", encoding="utf-8") as f:
-        f.write(f"[DEBUG] play_sound 被调用: {event_type}, SOUND_ENABLED={sound_config.get(event_type, False)}\n")
-
     if not sound_config.get(event_type, False):
         return
 
@@ -259,24 +248,13 @@ def play_sound(event_type: str):
 
     if sys.platform == "win32":
         import winsound
-        # 添加调试日志
-        with open(LOG_FILE, "a", encoding="utf-8") as f:
-            f.write(f"[DEBUG] 音频文件路径: {audio_file}\n")
-            f.write(f"[DEBUG] 文件是否存在: {os.path.exists(audio_file)}\n")
-
         if os.path.exists(audio_file):
             try:
-                # 改为同步播放，确保音频播放完成
                 winsound.PlaySound(audio_file, winsound.SND_FILENAME)
-                with open(LOG_FILE, "a", encoding="utf-8") as f:
-                    f.write(f"[DEBUG] 音频播放成功: {audio_file}\n")
-            except Exception as e:
-                with open(LOG_FILE, "a", encoding="utf-8") as f:
-                    f.write(f"[DEBUG] 音频播放失败: {e}\n")
+            except Exception:
+                pass
         else:
             winsound.MessageBeep(winsound.MB_ICONASTERISK)
-            with open(LOG_FILE, "a", encoding="utf-8") as f:
-                f.write(f"[DEBUG] 文件不存在，播放系统提示音\n")
     elif sys.platform == "darwin":
         if os.path.exists(audio_file):
             os.system(f'afplay "{audio_file}" &')
@@ -289,10 +267,6 @@ def handle_notification():
     - 用于自定义通知行为（如播放声音、发送到其他服务等）
     - 输入: stdin 接收 JSON，包含通知内容
     """
-    # 添加调试：记录函数被调用
-    with open(LOG_FILE, "a", encoding="utf-8") as f:
-        f.write(f"[DEBUG] handle_notification() 被调用, PID={os.getpid()}, 时间={datetime.now().isoformat()}\n")
-
     stdin_data = sys.stdin.read()
     try:
         data = json.loads(stdin_data) if stdin_data else {}

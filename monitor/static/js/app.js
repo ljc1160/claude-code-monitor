@@ -327,12 +327,18 @@ class ClaudeMonitor {
             const projectPath = session.project_path || '';
             const hostname = session.hostname || '';
             const pid = session.pid || '';
+            const sessionId = session.session_id || '';
             const eventCount = session.event_count || 0;
 
             // 截断路径显示
             const displayPath = projectPath.length > 40
                 ? '...' + projectPath.slice(-37)
                 : projectPath;
+
+            // 截断会话ID显示（显示前8位）
+            const displaySessionId = sessionId.length > 8
+                ? sessionId.substring(0, 8) + '...'
+                : sessionId;
 
             return `
                 <div class="session-item">
@@ -342,6 +348,10 @@ class ClaudeMonitor {
                         <span class="session-badge">${eventCount}</span>
                     </div>
                     <div class="session-details">
+                        <div class="session-detail-item">
+                            <span class="detail-label">🆔</span>
+                            <span class="detail-value" title="${sessionId}">${displaySessionId}</span>
+                        </div>
                         <div class="session-detail-item">
                             <span class="detail-label">📁</span>
                             <span class="detail-value" title="${projectPath}">${displayPath}</span>

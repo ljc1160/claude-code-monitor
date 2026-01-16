@@ -15,16 +15,24 @@ echo.
 
 REM Check if Python is installed
 echo Checking Python installation...
-python --version
-if errorlevel 1 (
-    echo.
-    echo [ERROR] Python not found! Please install Python first.
-    echo Download from: https://www.python.org/downloads/
-    echo.
-    pause
-    exit /b 1
+set PYTHON_CMD=python
+py --version >nul 2>&1
+if not errorlevel 1 (
+    set PYTHON_CMD=py
+    py --version
+) else (
+    python --version >nul 2>&1
+    if errorlevel 1 (
+        echo.
+        echo [ERROR] Python not found! Please install Python first.
+        echo Download from: https://www.python.org/downloads/
+        echo.
+        pause
+        exit /b 1
+    )
+    python --version
 )
-echo [OK] Python found
+echo [OK] Python found (using %PYTHON_CMD%)
 echo.
 
 REM Check if installation is needed
@@ -52,7 +60,7 @@ if %NEED_INSTALL%==1 (
     echo.
 
     echo Configuring Claude Code hooks...
-    python install.py
+    %PYTHON_CMD% install.py
     if errorlevel 1 (
         echo [ERROR] Failed to configure hooks!
         pause
@@ -66,7 +74,7 @@ if %NEED_INSTALL%==1 (
     echo   Optional: Generate Audio Files
     echo ============================================
     echo You can generate audio files by running:
-    echo   python cosy_voice_tts_save.py
+    echo   %PYTHON_CMD% cosy_voice_tts_save.py
     echo.
     echo Press any key to start the monitor server...
     pause >nul
@@ -94,7 +102,7 @@ if not exist "%~dp0monitor\server.py" (
 
 cd /d "%~dp0monitor"
 echo Starting server from: %CD%
-start "Monitor Server" python server.py
+start "Monitor Server" %PYTHON_CMD% server.py
 
 REM Wait for server to start
 echo Waiting for server to start...

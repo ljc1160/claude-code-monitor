@@ -118,7 +118,7 @@ if not exist "%~dp0monitor\server.py" (
 
 cd /d "%~dp0monitor"
 echo Starting server from: %CD%
-start "Monitor Server" %PYTHON_CMD% server.py
+start "Monitor Server" cmd /k "%PYTHON_CMD% server.py"
 
 REM Wait for server to start
 echo Waiting for server to start...

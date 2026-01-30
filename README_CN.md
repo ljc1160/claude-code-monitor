@@ -39,7 +39,7 @@ git clone https://github.com/ljc1160/claude-code-monitor.git
 cd claude-code-monitor
 
 # 2. 安装依赖
-pip install -r requirements.txt
+pip install -r monitor/requirements.txt
 
 # 3. 配置 Claude Code hooks
 python install.py
@@ -65,12 +65,12 @@ claude-code-monitor/
 ├── claude_hooks.py         # Claude Code hooks 实现
 ├── settings.json.template  # Hooks 配置模板
 ├── cosy_voice_tts_save.py  # 音频生成脚本
-├── monitor/                # 监控平台
-│   ├── server.py          # 后端服务
-│   ├── config.json        # 配置文件
-│   ├── static/            # 前端资源
-│   └── audio/             # 音频文件目录
-└── requirements.txt        # Python 依赖
+└── monitor/                # 监控平台
+    ├── server.py          # 后端服务
+    ├── requirements.txt   # Python 依赖
+    ├── config.json        # 配置文件
+    ├── static/            # 前端资源
+    └── audio/             # 音频文件目录
 ```
 
 ## 配置说明

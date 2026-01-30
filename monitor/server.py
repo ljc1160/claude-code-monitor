@@ -230,19 +230,28 @@ def save_config(config: Dict) -> bool:
         return False
 
 
-async def send_dingtalk_notification(event: Dict, config: Dict):
-    """发送钉钉通知"""
+async def send_dingtalk_notification(event: Dict, config: Dict, is_test: bool = False):
+    """发送钉钉通知
+
+    Args:
+        event: 事件数据
+        config: 配置信息
+        is_test: 是否为测试调用，测试调用会跳过 enabled 和事件类型检查
+    """
     dingtalk_config = config.get("dingtalk", {})
 
-    # 检查是否启用
-    if not dingtalk_config.get("enabled", False):
+    # 检查是否启用（测试调用跳过此检查）
+    if not is_test and not dingtalk_config.get("enabled", False):
         return
 
-    # 检查是否需要推送此事件
+    # 获取事件类型
     event_type = event.get("event_type", "")
-    allowed_events = dingtalk_config.get("events", [])
-    if event_type not in allowed_events:
-        return
+
+    # 检查是否需要推送此事件（测试调用跳过此检查）
+    if not is_test:
+        allowed_events = dingtalk_config.get("events", [])
+        if event_type not in allowed_events:
+            return
 
     webhook_url = dingtalk_config.get("webhook_url", "")
     secret = dingtalk_config.get("secret", "")
@@ -427,7 +436,7 @@ async def test_dingtalk():
     }
 
     try:
-        await send_dingtalk_notification(test_event, config)
+        await send_dingtalk_notification(test_event, config, is_test=True)
         return {"status": "ok", "message": "测试消息已发送，请检查钉钉群"}
     except Exception as e:
         return {"status": "error", "message": f"发送失败: {str(e)}"}

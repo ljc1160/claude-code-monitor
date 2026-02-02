@@ -12,10 +12,50 @@ echo "============================================"
 echo ""
 
 # 检查 Python 是否安装
-if ! command -v python3 &> /dev/null; then
-    echo -e "${RED}[ERROR] Python3 not found! Please install Python3 first.${NC}"
+echo "Checking Python installation..."
+PYTHON_CMD=""
+
+if command -v python3 &> /dev/null; then
+    PYTHON_CMD="python3"
+    echo -e "${GREEN}[OK] Found python3${NC}"
+    python3 --version
+elif command -v python &> /dev/null; then
+    # 检查 python 版本是否为 Python 3
+    PYTHON_VERSION=$(python --version 2>&1 | grep -oP 'Python \K[0-9]+')
+    if [ "$PYTHON_VERSION" -ge 3 ]; then
+        PYTHON_CMD="python"
+        echo -e "${GREEN}[OK] Found python (Python 3)${NC}"
+        python --version
+    else
+        echo -e "${RED}[ERROR] Python 3 not found! Found Python 2 instead.${NC}"
+        echo -e "${RED}Please install Python 3 first.${NC}"
+        exit 1
+    fi
+else
+    echo -e "${RED}[ERROR] Python not found! Please install Python 3 first.${NC}"
     exit 1
 fi
+echo ""
+
+# 检查 pip 是否可用
+echo "Checking pip installation..."
+$PYTHON_CMD -m pip --version &> /dev/null
+if [ $? -ne 0 ]; then
+    echo -e "${BLUE}[WARNING] pip not found, attempting to install...${NC}"
+    $PYTHON_CMD -m ensurepip --default-pip &> /dev/null
+    if [ $? -ne 0 ]; then
+        echo -e "${RED}[ERROR] Failed to install pip automatically!${NC}"
+        echo -e "${RED}Please install pip manually using one of these commands:${NC}"
+        echo "  sudo apt install python3-pip    # For Debian/Ubuntu"
+        echo "  sudo yum install python3-pip    # For CentOS/RHEL"
+        echo "  sudo dnf install python3-pip    # For Fedora"
+        echo ""
+        exit 1
+    fi
+    echo -e "${GREEN}[OK] pip installed successfully${NC}"
+fi
+echo -e "${GREEN}[OK] pip is available${NC}"
+echo ""
 
 # 获取脚本所在目录
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -25,7 +65,7 @@ cd "$SCRIPT_DIR"
 NEED_INSTALL=0
 
 # 检查依赖是否已安装
-if ! pip3 show fastapi &> /dev/null; then
+if ! $PYTHON_CMD -m pip show fastapi &> /dev/null; then
     NEED_INSTALL=1
 fi
 
@@ -40,7 +80,7 @@ if [ $NEED_INSTALL -eq 1 ]; then
     echo ""
 
     echo "Installing Python dependencies..."
-    pip3 install -r monitor/requirements.txt
+    $PYTHON_CMD -m pip install -r monitor/requirements.txt
     if [ $? -ne 0 ]; then
         echo -e "${RED}[ERROR] Failed to install dependencies!${NC}"
         exit 1
@@ -48,7 +88,7 @@ if [ $NEED_INSTALL -eq 1 ]; then
     echo ""
 
     echo "Configuring Claude Code hooks..."
-    python3 install.py
+    $PYTHON_CMD install.py
     if [ $? -ne 0 ]; then
         echo -e "${RED}[ERROR] Failed to configure hooks!${NC}"
         exit 1
@@ -61,7 +101,7 @@ if [ $NEED_INSTALL -eq 1 ]; then
     echo "   Optional: Generate Audio Files"
     echo "============================================"
     echo "You can generate audio files by running:"
-    echo "  python3 cosy_voice_tts_save.py"
+    echo "  $PYTHON_CMD cosy_voice_tts_save.py"
     echo ""
     read -p "Press Enter to start the monitor server..."
     echo ""
@@ -72,7 +112,7 @@ echo ""
 
 # 启动服务器
 cd "$SCRIPT_DIR/monitor"
-python3 server.py &
+$PYTHON_CMD server.py &
 SERVER_PID=$!
 
 # 等待服务器启动

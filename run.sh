@@ -35,6 +35,27 @@ else
     echo -e "${RED}[ERROR] Python not found! Please install Python 3 first.${NC}"
     exit 1
 fi
+echo ""
+
+# 检查 pip 是否可用
+echo "Checking pip installation..."
+$PYTHON_CMD -m pip --version &> /dev/null
+if [ $? -ne 0 ]; then
+    echo -e "${BLUE}[WARNING] pip not found, attempting to install...${NC}"
+    $PYTHON_CMD -m ensurepip --default-pip &> /dev/null
+    if [ $? -ne 0 ]; then
+        echo -e "${RED}[ERROR] Failed to install pip automatically!${NC}"
+        echo -e "${RED}Please install pip manually using one of these commands:${NC}"
+        echo "  sudo apt install python3-pip    # For Debian/Ubuntu"
+        echo "  sudo yum install python3-pip    # For CentOS/RHEL"
+        echo "  sudo dnf install python3-pip    # For Fedora"
+        echo ""
+        exit 1
+    fi
+    echo -e "${GREEN}[OK] pip installed successfully${NC}"
+fi
+echo -e "${GREEN}[OK] pip is available${NC}"
+echo ""
 
 # 获取脚本所在目录
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"

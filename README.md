@@ -118,3 +118,7 @@ After configuration, monitoring events will be automatically pushed to DingTalk 
 - Windows
 - macOS
 - Linux
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=ljc1160/claude-code-monitor&type=Date)](https://star-history.com/#ljc1160/claude-code-monitor&Date)

@@ -103,13 +103,13 @@ Audio files will be saved to `monitor/static/audio/` directory. Supported event 
 
 #### Audio Control
 
-Visit **http://localhost:18765/config** to toggle audio playback for each event in the web interface.
+Open the dashboard at **http://localhost:18765**, click the **Settings button** in the top-right corner, and toggle audio playback for each event in the settings dialog.
 
 ### 3. DingTalk Push Configuration
 
-Visit **http://localhost:18765/config** to configure:
+Open the dashboard at **http://localhost:18765**, click the **Settings button** in the top-right corner to configure:
 - DingTalk robot Webhook URL
-- AccessToken (optional)
+- Secret (optional)
 
 After configuration, monitoring events will be automatically pushed to DingTalk groups.
 

@@ -103,13 +103,13 @@ python cosy_voice_tts_save.py
 
 #### 音频开关控制
 
-访问 **http://localhost:18765/config** 可在 Web 界面动态开关各事件的音频播放。
+打开监控面板 **http://localhost:18765**，点击右上角的 **设置按钮**，在弹窗中可动态开关各事件的音频播放。
 
 ### 3. 钉钉推送配置
 
-访问 **http://localhost:18765/config** 设置：
+打开监控面板 **http://localhost:18765**，点击右上角的 **设置按钮**，在弹窗中配置：
 - 钉钉机器人 Webhook URL
-- AccessToken（可选）
+- Secret（可选）
 
 配置后，监控事件会自动推送到钉钉群。
 

@@ -132,7 +132,7 @@ echo ============================================
 echo   Monitor is running!
 echo ============================================
 echo   URL: http://localhost:18765
-echo   Config: http://localhost:18765/config
+echo   Config: Click the Settings button in the top-right corner
 echo.
 echo Press any key to stop the monitor...
 echo ============================================
